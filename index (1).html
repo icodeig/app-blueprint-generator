@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Blueprint Generator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;}
+.header{background:#161b22;border-bottom:1px solid #30363d;padding:1rem 0;}
+.header-inner{max-width:860px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:18px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px;}
+.logo-badge{font-size:11px;background:#1f6feb33;color:#58a6ff;border:1px solid #1f6feb;border-radius:20px;padding:2px 8px;}
+.main{max-width:860px;margin:0 auto;padding:2rem 1.5rem;}
+.hero h2{font-size:22px;font-weight:600;color:#fff;margin-bottom:6px;}
+.hero p{font-size:14px;color:#8b949e;line-height:1.6;margin-bottom:1.5rem;}
+.pipeline-row{display:flex;align-items:center;margin:0 0 2rem;overflow-x:auto;padding-bottom:4px;}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+.pipe-dot{width:34px;height:34px;border-radius:50%;background:#161b22;border:1.5px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#8b949e;}
+.pipe-label{font-size:10px;color:#6e7681;text-align:center;max-width:55px;line-height:1.3;}
+.pipe-arrow{width:22px;height:2px;background:#30363d;flex-shrink:0;align-self:center;margin-bottom:16px;}
+.apikey-row{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.apikey-row label{font-size:13px;color:#8b949e;white-space:nowrap;}
+.apikey-wrap{flex:1;min-width:200px;position:relative;}
+.apikey-wrap input{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 44px 8px 12px;color:#e6edf3;font-size:13px;font-family:'Courier New',monospace;outline:none;}
+.apikey-wrap input:focus{border-color:#1f6feb;}
+.apikey-wrap input::placeholder{color:#484f58;}
+.show-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#30363d;border:none;color:#8b949e;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:4px;}
+.get-key{font-size:12px;color:#58a6ff;background:#1f6feb1a;border:1px solid #1f6feb55;border-radius:6px;padding:6px 12px;text-decoration:none;white-space:nowrap;}
+.get-key:hover{background:#1f6feb33;}
+textarea{width:100%;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;color:#e6edf3;font-size:14px;font-family:inherit;resize:vertical;min-height:90px;outline:none;line-height:1.6;}
+textarea:focus{border-color:#1f6feb;}
+textarea::placeholder{color:#484f58;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.chip{font-size:11px;color:#8b949e;background:#161b22;border:1px solid #30363d;border-radius:20px;padding:3px 10px;cursor:pointer;}
+.chip:hover{border-color:#58a6ff;color:#58a6ff;}
+.run-btn{width:100%;padding:13px;background:#238636;border:1px solid #2ea043;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin:12px 0;}
+.run-btn:hover:not(:disabled){background:#2ea043;}
+.run-btn:disabled{opacity:0.55;cursor:not-allowed;}
+.info-box{padding:10px 14px;background:#0d1f30;border:1px solid #1f6feb55;border-radius:8px;color:#79c0ff;font-size:13px;margin-bottom:12px;display:none;}
+.err-banner{display:none;padding:10px 14px;background:#3d1f1f;border:1px solid #f8514933;border-radius:8px;color:#f85149;font-size:13px;margin-bottom:12px;line-height:1.5;}
+.stage-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;transition:border-color 0.3s,box-shadow 0.3s;}
+.stage-card.active{border-color:#388bfd;box-shadow:0 0 0 3px #1f6feb22;}
+.stage-card.done{border-color:#3fb950;}
+.stage-card.error{border-color:#f85149;}
+.stage-header{display:flex;align-items:center;gap:12px;}
+.stage-icon{width:38px;height:38px;border-radius:8px;background:#0d1117;border:1px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#8b949e;flex-shrink:0;}
+.stage-info{flex:1;}
+.stage-name{font-size:14px;font-weight:500;color:#e6edf3;}
+.stage-desc{font-size:12px;color:#6e7681;margin-top:2px;}
+.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;border:1px solid transparent;}
+.b-wait{background:#1c2128;color:#6e7681;border-color:#30363d;}
+.b-run{background:#1f2d45;color:#388bfd;border-color:#1f6feb;}
+.b-done{background:#1b2f1b;color:#3fb950;border-color:#238636;}
+.b-err{background:#2d1f1f;color:#f85149;border-color:#f8514944;}
+.result-box{margin-top:12px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px;font-size:11.5px;font-family:'Courier New',monospace;color:#8b949e;overflow:auto;max-height:200px;white-space:pre;display:none;line-height:1.5;}
+.result-box.show{display:block;}
+.result-box.err{color:#f85149;}
+.final-section{display:none;margin-top:1.5rem;background:#161b22;border:1px solid #3fb950;border-radius:10px;padding:1.25rem;}
+.final-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.final-title{font-size:15px;font-weight:600;color:#fff;}
+.final-actions{display:flex;gap:8px;}
+.action-btn{font-size:12px;padding:5px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#8b949e;cursor:pointer;}
+.action-btn:hover{border-color:#58a6ff;color:#58a6ff;}
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.stat-card{flex:1;min-width:80px;background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px 14px;text-align:center;}
+.stat-num{font-size:20px;font-weight:700;color:#58a6ff;}
+.stat-lbl{font-size:11px;color:#6e7681;margin-top:2px;}
+.score-row{display:flex;align-items:center;gap:10px;font-size:12px;color:#8b949e;margin-bottom:12px;}
+.score-track{flex:1;height:5px;background:#21262d;border-radius:3px;overflow:hidden;}
+.score-fill{height:100%;background:#3fb950;border-radius:3px;transition:width 0.8s ease;}
+.score-val{font-weight:600;color:#3fb950;min-width:35px;text-align:right;}
+.final-output{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:14px;font-size:11.5px;font-family:'Courier New',monospace;color:#8b949e;overflow:auto;max-height:420px;white-space:pre;line-height:1.5;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{display:inline-block;animation:spin 1s linear infinite;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">App Blueprint Generator <span class="logo-badge">v3.0 — Groq</span></div>
+  </div>
+</div>
+<div class="main">
+  <div class="hero">
+    <h2>Natural Language to App Blueprint</h2>
+    <p>6-stage AI pipeline. Powered by Groq (free, fast, no quota issues). Generates complete UI, API, database and auth schemas from plain English.</p>
+    <div class="pipeline-row">
+      <div class="pipe-step"><div class="pipe-dot">1</div><div class="pipe-label">Intent</div></div><div class="pipe-arrow"></div>
+      <div class="pipe-step"><div class="pipe-dot">2</div><div class="pipe-label">Architecture</div></div><div class="pipe-arrow"></div>
+      <div class="pipe-step"><div class="pipe-dot">3</div><div class="pipe-label">UI Schema</div></div><div class="pipe-arrow"></div>
+      <div class="pipe-step"><div class="pipe-dot">4</div><div class="pipe-label">API Schema</div></div><div class="pipe-arrow"></div>
+      <div class="pipe-step"><div class="pipe-dot">5</div><div class="pipe-label">DB + Auth</div></div><div class="pipe-arrow"></div>
+      <div class="pipe-step"><div class="pipe-dot">6</div><div class="pipe-label">Validate</div></div>
+    </div>
+  </div>
+
+  <div class="apikey-row">
+    <label>Groq API Key</label>
+    <div class="apikey-wrap">
+      <input type="password" id="apiKey" placeholder="gsk_..." />
+      <button class="show-btn" onclick="toggleKey()">show</button>
+    </div>
+    <a class="get-key" href="https://console.groq.com/keys" target="_blank">Get free key (30 sec)</a>
+  </div>
+
+  <textarea id="prompt" placeholder="Describe your app... e.g. Build a CRM with login, contacts, dashboard, role-based access, and premium payments. Admins can see analytics."></textarea>
+  <div class="chips">
+    <span style="font-size:11px;color:#484f58;align-self:center;">Try:</span>
+    <span class="chip" onclick="usePrompt(this)">CRM with login, contacts, analytics, admin roles</span>
+    <span class="chip" onclick="usePrompt(this)">E-commerce with products, cart, payments, orders</span>
+    <span class="chip" onclick="usePrompt(this)">Debate chatbot that argues using scientific sources</span>
+    <span class="chip" onclick="usePrompt(this)">Task manager with teams, deadlines, notifications</span>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="run()">Generate Blueprint</button>
+  <div class="info-box" id="infoBox"></div>
+  <div class="err-banner" id="errBanner"></div>
+  <div id="stageContainer"></div>
+
+  <div class="final-section" id="finalSection">
+    <div class="final-header">
+      <div class="final-title">Final Blueprint JSON</div>
+      <div class="final-actions">
+        <button class="action-btn" id="copyBtn" onclick="copyJSON()">Copy JSON</button>
+        <button class="action-btn" onclick="downloadJSON()">Download</button>
+      </div>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="score-row" id="scoreRow" style="display:none;">
+      <span>Consistency score</span>
+      <div class="score-track"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+      <span class="score-val" id="scoreVal">0%</span>
+    </div>
+    <div class="final-output" id="finalOutput"></div>
+  </div>
+</div>
+
+<script>
+// Groq: free, 30 RPM, no daily quota issues
+// Models in order of preference
+var MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768','gemma2-9b-it'];
+var workingModel = null;
+
+var STAGES = [
+  {id:1, label:'Intent Extraction',   desc:'Understanding what you want to build'},
+  {id:2, label:'Architecture Design', desc:'Planning pages, APIs, and data flow'},
+  {id:3, label:'UI Schema',           desc:'Generating pages, routes and components'},
+  {id:4, label:'API Schema',          desc:'Generating endpoints, methods and auth rules'},
+  {id:5, label:'DB and Auth Schema',  desc:'Generating database tables, fields and roles'},
+  {id:6, label:'Validation & Repair', desc:'Checking cross-layer consistency, fixing issues'}
+];
+
+var PROMPTS = [
+  function(p,r){return 'Extract app intent from this description. Return ONLY a raw JSON object, no markdown, no extra text:\n{"app_name":"","app_type":"web","entities":[],"features":[],"roles":[],"business_logic":[]}\nDescription: '+p;},
+  function(p,r){return 'Design app architecture. Return ONLY a raw JSON object, no markdown:\n{"pages":[{"name":"","route":"","purpose":"","accessible_by":[]}],"api_modules":[],"db_tables":[],"auth_type":"JWT","third_party_services":[]}\nIntent: '+JSON.stringify(r[0]);},
+  function(p,r){return 'Generate ONLY the UI schema. Return ONLY a raw JSON object, no markdown:\n{"pages":[{"name":"","route":"","components":[],"accessible_by":[]}]}\nIntent: '+JSON.stringify(r[0])+'\nPlanned pages: '+JSON.stringify(r[1]&&r[1].pages);},
+  function(p,r){return 'Generate the API endpoints for this app. IMPORTANT: Return ONLY a raw JSON object. Do NOT include request_body or response_schema fields. Short and complete JSON only.\nFormat: {"endpoints":[{"method":"GET","path":"/example","description":"desc","auth_required":true,"roles":["user"]}]}\nApp name: '+r[0].app_name+'\nModules: '+JSON.stringify(r[1]&&r[1].api_modules)+'\nTables: '+JSON.stringify(r[1]&&r[1].db_tables)+'. Generate 6-10 endpoints max. Return ONLY JSON.';},
+  function(p,r){return 'Generate ONLY db_schema and auth_schema. Return ONLY a raw JSON object, no markdown:\n{"db_schema":{"tables":[{"name":"","fields":[{"name":"","type":"string","required":true}],"relations":[]}]},"auth_schema":{"type":"JWT","roles":[{"name":"","permissions":[]}]}}\nTables needed: '+JSON.stringify(r[1]&&r[1].db_tables)+'\nRoles: '+JSON.stringify(r[0]&&r[0].roles);},
+  function(p,r){return 'Validate schema consistency. Check: API endpoints match DB tables, UI pages have API endpoints, roles are consistent. Fix issues. Return ONLY a raw JSON object, no markdown:\n{"issues_found":[],"fixes_applied":[],"consistency_score":85,"final_status":"valid","summary":""}\nUI pages: '+JSON.stringify(r[2]&&r[2].pages)+'\nAPI endpoints: '+JSON.stringify(r[3]&&r[3].endpoints)+'\nDB tables: '+JSON.stringify(r[4]&&r[4].db_schema&&r[4].db_schema.tables)+'\nAuth roles: '+JSON.stringify(r[4]&&r[4].auth_schema&&r[4].auth_schema.roles);}
+];
+
+var results=[], blueprint=null, startTime=null;
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+// ── UI ────────────────────────────────────────────────────────────
+function buildCards(){
+  document.getElementById('stageContainer').innerHTML=STAGES.map(function(s){
+    return '<div id="s'+s.id+'" class="stage-card"><div id="sh'+s.id+'"></div><div id="r'+s.id+'" class="result-box"></div></div>';
+  }).join('');
+}
+function setHeader(id,status){
+  var s=STAGES[id-1];
+  var badges={wait:'<span class="badge b-wait">Waiting</span>',running:'<span class="badge b-run"><span class="spin">&#9881;</span> Running</span>',done:'<span class="badge b-done">Done</span>',error:'<span class="badge b-err">Error</span>'};
+  var cls={running:' active',done:' done',error:' error'};
+  document.getElementById('s'+id).className='stage-card'+(cls[status]||'');
+  document.getElementById('sh'+id).innerHTML='<div class="stage-header"><div class="stage-icon">'+id+'</div><div class="stage-info"><div class="stage-name">Stage '+id+' \u2014 '+s.label+'</div><div class="stage-desc">'+s.desc+'</div></div>'+(badges[status]||badges.wait)+'</div>';
+}
+function setResult(id,text,isErr){var rb=document.getElementById('r'+id);rb.textContent=text;rb.className='result-box show'+(isErr?' err':'');}
+function showInfo(msg){var b=document.getElementById('infoBox');b.textContent=msg;b.style.display=msg?'block':'none';}
+function showErr(msg){var b=document.getElementById('errBanner');b.textContent=msg;b.style.display='block';}
+function init(){
+  results.length=0;blueprint=null;
+  document.getElementById('errBanner').style.display='none';
+  document.getElementById('infoBox').style.display='none';
+  document.getElementById('finalSection').style.display='none';
+  buildCards();STAGES.forEach(function(s){setHeader(s.id,'wait');});
+}
+
+// ── JSON extractor ────────────────────────────────────────────────
+function exJSON(text){
+  var t=text.trim();
+  try{return JSON.parse(t);}catch(e){}
+  var m1=t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if(m1){try{return JSON.parse(m1[1].trim());}catch(e){}}
+  var m2=t.match(/(\{[\s\S]*\})/);
+  if(m2){try{return JSON.parse(m2[1]);}catch(e){}}
+  throw new Error('Cannot parse JSON: '+t.slice(0,120));
+}
+
+// ── Groq API call ─────────────────────────────────────────────────
+async function callGroq(apiKey, model, prompt){
+  var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:model,messages:[{role:'user',content:prompt}],temperature:0.1,max_tokens:8000})
+  });
+  var data=await res.json();
+  if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+  var text=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+  if(!text) throw new Error('Empty response from '+model);
+  return text;
+}
+
+async function callAI(apiKey, prompt){
+  var models=workingModel?[workingModel]:MODELS;
+  var lastErr;
+  for(var i=0;i<models.length;i++){
+    try{
+      var result=await callGroq(apiKey,models[i],prompt);
+      workingModel=models[i];
+      return result;
+    }catch(e){
+      lastErr=e;
+      console.log('Model '+models[i]+' failed:'+e.message);
+    }
+  }
+  throw new Error('All models failed. Check your Groq API key at console.groq.com/keys\nLast error: '+(lastErr&&lastErr.message));
+}
+
+// ── Run one stage ─────────────────────────────────────────────────
+async function runStage(i,apiKey,prompt){
+  var id=i+1;
+  setHeader(id,'running');
+  try{
+    var text=await callAI(apiKey,PROMPTS[i](prompt,results));
+    var data;
+    try{data=exJSON(text);}
+    catch(e){
+      var fix=await callAI(apiKey,'Fix this broken JSON. Return ONLY valid JSON, nothing else:\n'+text);
+      data=exJSON(fix);
+    }
+    results[i]=data;
+    setHeader(id,'done');
+    setResult(id,JSON.stringify(data,null,2),false);
+  }catch(e){
+    setHeader(id,'error');
+    setResult(id,'Error: '+e.message,true);
+    throw e;
+  }
+}
+
+// ── Main ──────────────────────────────────────────────────────────
+async function run(){
+  var apiKey=document.getElementById('apiKey').value.trim();
+  var prompt=document.getElementById('prompt').value.trim();
+  if(!apiKey){showErr('Please enter your Groq API key. Get one free at console.groq.com/keys');return;}
+  if(!prompt){showErr('Please describe your app.');return;}
+  try{localStorage.setItem('bpg_key_groq',apiKey);}catch(e){}
+
+  var btn=document.getElementById('runBtn');
+  btn.disabled=true; btn.textContent='Running pipeline...';
+  workingModel=null; init(); startTime=Date.now();
+
+  try{
+    for(var i=0;i<STAGES.length;i++){
+      showInfo('Running stage '+(i+1)+' of '+STAGES.length+'...');
+      await runStage(i,apiKey,prompt);
+    }
+    var elapsed=((Date.now()-startTime)/1000).toFixed(1);
+    showInfo('');
+
+    blueprint={
+      meta:{prompt:prompt,generated_at:new Date().toISOString(),pipeline_version:'3.0',stages:6,model:workingModel||'groq',latency_seconds:parseFloat(elapsed)},
+      intent:results[0],architecture:results[1],
+      schemas:{ui_schema:results[2],api_schema:results[3],db_schema:results[4]&&results[4].db_schema,auth_schema:results[4]&&results[4].auth_schema},
+      validation:results[5]
+    };
+
+    var pageCount=(results[2]&&results[2].pages&&results[2].pages.length)||0;
+    var epCount=(results[3]&&results[3].endpoints&&results[3].endpoints.length)||0;
+    var tblCount=(results[4]&&results[4].db_schema&&results[4].db_schema.tables&&results[4].db_schema.tables.length)||0;
+    var score=(results[5]&&results[5].consistency_score)||0;
+
+    document.getElementById('statsRow').innerHTML=
+      '<div class="stat-card"><div class="stat-num">'+pageCount+'</div><div class="stat-lbl">UI Pages</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+epCount+'</div><div class="stat-lbl">API Endpoints</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+tblCount+'</div><div class="stat-lbl">DB Tables</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+elapsed+'s</div><div class="stat-lbl">Latency</div></div>';
+
+    if(score){document.getElementById('scoreFill').style.width=score+'%';document.getElementById('scoreVal').textContent=score+'%';document.getElementById('scoreRow').style.display='flex';}
+    document.getElementById('finalOutput').textContent=JSON.stringify(blueprint,null,2);
+    document.getElementById('finalSection').style.display='block';
+    document.getElementById('finalSection').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    showInfo('');
+    showErr('Pipeline stopped: '+e.message);
+  }
+  btn.disabled=false; btn.textContent='Generate Blueprint';
+}
+
+function copyJSON(){if(!blueprint)return;navigator.clipboard.writeText(JSON.stringify(blueprint,null,2));var b=document.getElementById('copyBtn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy JSON';},2000);}
+function downloadJSON(){if(!blueprint)return;var blob=new Blob([JSON.stringify(blueprint,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blueprint.json';a.click();}
+function toggleKey(){var inp=document.getElementById('apiKey');inp.type=inp.type==='password'?'text':'password';}
+function usePrompt(el){document.getElementById('prompt').value=el.textContent.trim();}
+try{var k=localStorage.getItem('bpg_key_groq');if(k)document.getElementById('apiKey').value=k;}catch(e){}
+init();
+</script>
+</body>
+</html>
